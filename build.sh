@@ -23,16 +23,27 @@ fi
 [ -n "$JAVAC" ] || { echo "ERROR: JDK not found. Install JDK 17+ or set JAVA_HOME."; exit 1; }
 KEYTOOL="$(dirname "$JAVAC")/keytool"
 
-# ---- signing keystore: never commit it; generate on first build ----
+# ---- signing keystore ----
+# IMPORTANT: this keystore must stay identical to the one used for every
+# published APK. Android refuses to install an update signed with a different
+# key ("INSTALL_FAILED_UPDATE_INCOMPATIBLE"); the user would have to uninstall
+# first and lose all saved device settings. Keep a private backup of r1app.jks.
+#
+# Cert SHA1: 7C:AB:54:D1:1A:DD:F4:DF:8C:3B:F3:65:01:50:BD:2D:77:E6:BE:DD
+# Never commit the keystore itself (see .gitignore).
 JKS="r1app.jks"
-STOREPASS="fxlegacy"
-ALIAS="fxlegacy"
+STOREPASS="${FX_STOREPASS:-123456}"
+ALIAS="${FX_ALIAS:-r1app}"
 if [ ! -f "$JKS" ]; then
-  echo "[0/7] generating signing keystore ($JKS)..."
+  echo ""
+  echo "WARNING: $JKS not found, generating a NEW signing key."
+  echo "         APKs signed with it will NOT install over existing FX遗产"
+  echo "         builds. Restore your original keystore to keep upgrades working."
+  echo ""
   "$KEYTOOL" -genkeypair -v -keystore "$JKS" -alias "$ALIAS" \
     -keyalg RSA -keysize 2048 -validity 10000 \
     -storepass "$STOREPASS" -keypass "$STOREPASS" \
-    -dname "CN=FXLegacy, OU=Personal, O=FXLegacy, L=NA, ST=NA, C=CN" >/dev/null 2>&1
+    -dname "CN=R1 Controller, OU=Home, O=Personal, L=CN, ST=CN, C=CN" >/dev/null 2>&1
 fi
 
 # native Windows exe needs Windows-style paths
