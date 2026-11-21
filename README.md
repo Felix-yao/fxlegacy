@@ -3,9 +3,11 @@
 一个装在安卓手机上的设备控制 App，通过家里 WiFi 直连**斐讯 R1 音箱**和**斐讯 TC1 排插**（刷了 zTC1 固件），电脑无需开机。iOS 风格界面。
 
 > **下载**：[最新 Release](https://github.com/Felix-yao/fxlegacy/releases/latest)
-> 注：发布版 APK 内设备信息为占位值，需按下方「设备配置」改成自己的设备，或自行构建。
+> 装上直接可用 —— 首次运行会自动在局域网内发现 R1 音箱和 TC1 排插，不需要填 IP/MAC。
 
 ## 功能
+
+> 两台设备都支持**局域网自动发现**，不用手动填地址。
 
 ### R1 音箱
 - **一键打开蓝牙模式**：模拟三击顶键，让音箱进入蓝牙模式供电脑连接
@@ -38,7 +40,7 @@
 │   ├── AdbClient.java           # ADB over TCP 客户端
 │   └── Tc1Client.java           # zTC1 UDP 客户端
 ├── res/                         # 布局 / drawable / 图标 / 字符串
-│   └── values/device.xml        # ★ 设备配置（IP / MAC）
+│   └── values/device.xml        # 设备默认地址（自动发现失败时才用）
 └── tools/                       # 构建工具（aapt2 / android.jar / r8 / apksig）
 ```
 
@@ -54,16 +56,27 @@ bash build.sh
 
 构建脚本会在首次运行时自动生成签名密钥 `r1app.jks`（已被 `.gitignore` 排除，不要提交）。**用自己的密钥签名后，后续更新必须继续用同一个密钥才能覆盖安装。**
 
-## 配置自己的设备
+## 设备地址：自动发现
 
-编辑 `res/values/device.xml`：
+**通常什么都不用配。** App 首次运行会自动在局域网里找设备：
+
+- **R1 音箱**：并发扫描本网段的 5555 端口（ADB），找到就自动记住
+- **TC1 排插**：发一条 UDP 广播，设备会回报自己的 MAC，App 自动采用
+
+找到后的地址存在本地，之后直接连，不再扫描。IP 变了也会自动重新找（连不上时才扫，不拖慢启动）。
+
+R1 页右侧还有一个「查找」按钮，可以随时手动触发一次扫描。
+
+### 自动发现失败时
+
+如果路由器隔离了广播、或设备不在同一网段，可以改 `res/values/device.xml` 兜底：
 
 ```xml
 <string name="r1_ip">192.168.1.100</string>      <!-- 你的 R1 音箱 IP -->
 <string name="tc1_mac">001122334455</string>      <!-- 你的 TC1 MAC（小写无冒号） -->
 ```
 
-改完重新 `bash build.sh`。R1 的 IP 也可以在 App 内「音箱地址」处临时修改。
+改完重新 `bash build.sh`。R1 的 IP 也可以在 App 内「音箱地址」处直接填。
 
 ## zTC1 协议速查
 

@@ -36,7 +36,7 @@ public class DeviceListActivity extends Activity {
         });
 
         // Probe TC1 once for a live subtitle (power + socket count).
-        tc1 = new Tc1Client(Tc1Activity.TC1_MAC);
+        tc1 = new Tc1Client(DeviceConfig.tc1Mac(this));
         tcListener = new Tc1Client.Listener() {
             @Override public void onState(final Tc1Client.Tc1State s) {
                 ui.post(new Runnable() {
@@ -58,6 +58,27 @@ public class DeviceListActivity extends Activity {
         tc1.addListener(tcListener);
         tc1.start();
         tc1.query();
+
+        // Unknown device? Find it once, then re-probe with the real MAC.
+        if (!DeviceConfig.tc1Verified(this)) {
+            new Thread(new Runnable() {
+                @Override public void run() {
+                    final String mac = DeviceConfig.discoverTc1Mac(1800);
+                    if (mac == null) return;
+                    DeviceConfig.setTc1Mac(DeviceListActivity.this, mac);
+                    Tc1Activity.TC1_MAC = mac;
+                    ui.post(new Runnable() {
+                        @Override public void run() {
+                            if (tc1 != null && tcListener != null) tc1.detach(tcListener);
+                            tc1 = new Tc1Client(mac);
+                            tc1.addListener(tcListener);
+                            tc1.start();
+                            tc1.query();
+                        }
+                    });
+                }
+            }, "tc1-discover").start();
+        }
     }
 
     @Override

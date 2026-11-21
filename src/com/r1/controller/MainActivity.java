@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
 
     private volatile boolean busy = false;
     private int currentVolume = -1;
-    private volatile String ip = "192.168.1.100"; // replaced in onCreate
+    private volatile String ip = "";
     private AdbClient.Session session = null;
     private String sessionIp = null;
 
@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
         ipEdit = findViewById(R.id.ipEdit);
 
         android.content.SharedPreferences p = getSharedPreferences(PREF, MODE_PRIVATE);
-        ip = p.getString(KEY_IP, getString(R.string.r1_ip));
+        ip = DeviceConfig.r1Ip(this);
         ipEdit.setText(ip);
         sleeping = p.getBoolean(KEY_SLEEP, false);
         sleepRememberVol = p.getInt(KEY_SLEEP_VOL, 6);
@@ -115,6 +115,7 @@ public class MainActivity extends Activity {
 
         click(R.id.refreshBtn, new Runnable() { @Override public void run() { refresh(); } });
         click(R.id.saveBtn, new Runnable() { @Override public void run() { saveIp(); } });
+        click(R.id.findBtn, new Runnable() { @Override public void run() { findSpeaker(true); } });
         click(R.id.timerCancel, new Runnable() { @Override public void run() { cancelTimer(); } });
         click(R.id.sleepSwitch, new Runnable() { @Override public void run() { toggleSleep(); } });
         click(R.id.btButton, new Runnable() { @Override public void run() { openBluetooth(); } });
@@ -125,6 +126,47 @@ public class MainActivity extends Activity {
         click(R.id.t60, new Runnable() { @Override public void run() { startTimer(60); } });
 
         refresh();
+    }
+
+    private volatile boolean scanTried = false;
+
+    /**
+     * Scan the local network for the R1's ADB port and adopt the address found.
+     * @param manual true when the user tapped 查找 (always show feedback)
+     */
+    private void findSpeaker(final boolean manual) {
+        if (manual) setStatus(false, "正在局域网内查找音箱…");
+        pool.execute(new Runnable() {
+            @Override public void run() {
+                String found = DeviceConfig.discoverR1Ip(9000);
+                if (found == null) {
+                    ui.post(new Runnable() {
+                        @Override public void run() {
+                            if (manual) {
+                                Toast.makeText(MainActivity.this,
+                                        "没找到音箱，确认它已通电并连着同一 WiFi",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                            refresh();
+                        }
+                    });
+                    return;
+                }
+                final String host = found;
+                ip = host;
+                session = null;
+                sessionIp = null;
+                DeviceConfig.setR1Ip(MainActivity.this, host);
+                ui.post(new Runnable() {
+                    @Override public void run() {
+                        ipEdit.setText(host);
+                        Toast.makeText(MainActivity.this,
+                                "已找到音箱：" + host, Toast.LENGTH_SHORT).show();
+                        refresh();
+                    }
+                });
+            }
+        });
     }
 
     private void click(int id, final Runnable r) {
@@ -142,7 +184,10 @@ public class MainActivity extends Activity {
         if (TextUtils.isEmpty(s)) { Toast.makeText(this, "请输入 IP", Toast.LENGTH_SHORT).show(); return; }
         ip = s;
         currentVolume = -1;
-        getSharedPreferences(PREF, MODE_PRIVATE).edit().putString(KEY_IP, ip).apply();
+        session = null;
+        sessionIp = null;
+        DeviceConfig.setR1Ip(this, ip);
+        DeviceConfig.setR1Verified(this, false);
         Toast.makeText(this, "已保存 " + ip, Toast.LENGTH_SHORT).show();
         refresh();
     }
@@ -197,11 +242,18 @@ public class MainActivity extends Activity {
                         dump = s.shell("dumpsys audio");
                     } catch (Exception e) {
                         setStatus(false, "连不上 " + host + "，确认音箱通电并连着同一 WiFi（" + e.getMessage() + "）");
+                        // Configured address failed and we never reached this
+                        // speaker before: sweep the LAN once and retry.
+                        if (!scanTried && !DeviceConfig.r1Verified(MainActivity.this)) {
+                            scanTried = true;
+                            findSpeaker(false);
+                        }
                         return;
                     }
                     int v = AdbClient.parseVolume(dump);
                     if (v >= 0 && !sleeping) { currentVolume = v; showVolume(v); }
                     setStatus(true, "已直连 " + host);
+                    DeviceConfig.setR1Verified(MainActivity.this, true);
                     final String[] info = AdbClient.readInfo(s);
                     ui.post(new Runnable() {
                         @Override public void run() {

@@ -53,22 +53,31 @@ public final class Tc1Client {
     private static final CopyOnWriteArrayList<Listener> ALL_LISTENERS = new CopyOnWriteArrayList<>();
     private static final String TAG = "Tc1Client";
 
+    /** MAC of the last zTC1 that answered a broadcast — used for auto discovery. */
+    private static volatile String LAST_MAC = null;
+
     public Tc1Client(String mac) { this.mac = mac; }
+
+    public static String lastMac() { return LAST_MAC; }
+    public static void forgetLastMac() { LAST_MAC = null; }
 
     // Listeners are process-wide: every active Activity receives every reply.
     public void addListener(Listener l) { if (!ALL_LISTENERS.contains(l)) ALL_LISTENERS.add(l); }
     public void removeListener(Listener l) { ALL_LISTENERS.remove(l); }
 
     /** Start the shared socket + listener thread once for the whole process. */
-    public synchronized void start() {
+    public void start() { ensureStarted(); }
+
+    public static synchronized void ensureStarted() {
         if (running && socket != null && !socket.isClosed()) return;
+
         try {
             socket = new DatagramSocket(null);
             socket.setReuseAddress(true);
             socket.setBroadcast(true);           // required for 255.255.255.255
             socket.bind(new InetSocketAddress(PHONE_UDP_PORT));
         } catch (Exception e) {
-            notifyError("UDP 端口占用: " + e.getMessage());
+            notifyErrorStatic("UDP 端口占用: " + e.getMessage());
             return;
         }
         running = true;
@@ -101,21 +110,36 @@ public final class Tc1Client {
     public void send(String json) {
         new Thread(new Runnable() {
             @Override public void run() {
-                try {
-                    if (socket == null) {
-                        socket = new DatagramSocket(null);
-                        socket.setReuseAddress(true);
-                        socket.bind(new InetSocketAddress(PHONE_UDP_PORT));
-                    }
-                    InetAddress addr = InetAddress.getByName("255.255.255.255");
-                    byte[] data = json.getBytes(StandardCharsets.UTF_8);
-                    DatagramPacket p = new DatagramPacket(data, data.length, addr, DEVICE_UDP_PORT);
-                    socket.send(p);
-                } catch (Exception e) {
-                    notifyError("发送失败: " + e.getMessage());
-                }
+                sendNow(json);
             }
         }, "tc1-udp-send").start();
+    }
+
+    /** Fire-and-forget broadcast from a static context (auto discovery). */
+    public static void sendBroadcast(String json) {
+        ensureStarted();
+        new Thread(new Runnable() {
+            @Override public void run() {
+                sendNow(json);
+            }
+        }, "tc1-udp-send").start();
+    }
+
+    private static void sendNow(String json) {
+        try {
+            if (socket == null) {
+                socket = new DatagramSocket(null);
+                socket.setReuseAddress(true);
+                socket.setBroadcast(true);
+                socket.bind(new InetSocketAddress(PHONE_UDP_PORT));
+            }
+            InetAddress addr = InetAddress.getByName("255.255.255.255");
+            byte[] data = json.getBytes(StandardCharsets.UTF_8);
+            DatagramPacket p = new DatagramPacket(data, data.length, addr, DEVICE_UDP_PORT);
+            socket.send(p);
+        } catch (Exception e) {
+            notifyErrorStatic("发送失败: " + e.getMessage());
+        }
     }
 
     public void query() {
@@ -153,12 +177,13 @@ public final class Tc1Client {
              + "\":{\"setting\":{\"name\":\"" + safe + "\"}}}");
     }
 
-    private Tc1State parse(String json) {
+    private static Tc1State parse(String json) {
         try {
             JSONObject o = new JSONObject(json);
             if (!o.has("mac")) return null;
             Tc1State s = new Tc1State();
             s.mac = o.optString("mac");
+            if (s.mac != null && s.mac.length() == 12) LAST_MAC = s.mac.toLowerCase();
             // accept our device, or a broadcast status from any zTC1
             s.name = o.optString("name", null);
             s.version = o.optString("version", null);
@@ -183,10 +208,10 @@ public final class Tc1Client {
         }
     }
 
-    private void notifyState(final Tc1State s) {
+    private static void notifyState(final Tc1State s) {
         for (Listener l : ALL_LISTENERS) l.onState(s);
     }
-    private void notifyError(final String msg) {
+    private static void notifyErrorStatic(final String msg) {
         for (Listener l : ALL_LISTENERS) l.onError(msg);
     }
 }

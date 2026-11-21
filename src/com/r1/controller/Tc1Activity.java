@@ -19,7 +19,8 @@ import android.widget.Toast;
 
 public class Tc1Activity extends Activity implements Tc1Client.Listener {
 
-    public static String TC1_MAC = ""; // set in onCreate from resources
+    /** Device MAC; filled from DeviceConfig (saved value → auto discovery). */
+    public static String TC1_MAC = "";
 
     private Tc1Client client;
     private Tc1Client.Listener clientListener;
@@ -72,7 +73,6 @@ public class Tc1Activity extends Activity implements Tc1Client.Listener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tc1);
-        TC1_MAC = getString(R.string.tc1_mac);
         setTitle("TC1 排插");
         findViewById(R.id.tc1Back).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { finish(); }
@@ -87,6 +87,7 @@ public class Tc1Activity extends Activity implements Tc1Client.Listener {
         plugRowTop = findViewById(R.id.plugRowTop);
         plugRowBottom = findViewById(R.id.plugRowBottom);
 
+        TC1_MAC = DeviceConfig.tc1Mac(this);
         tcMac.setText(TC1_MAC);
         buildPlugRows();
 
@@ -104,6 +105,32 @@ public class Tc1Activity extends Activity implements Tc1Client.Listener {
         client.start();
         client.query();
         ui.postDelayed(refreshLoop, 5000);
+
+        // Never confirmed a device before? Ask the LAN who is out there and
+        // adopt the MAC it reports.
+        if (!DeviceConfig.tc1Verified(this)) discoverAndUseMac();
+    }
+
+    /** Best-effort discovery; silently keeps the configured MAC if nothing answers. */
+    private void discoverAndUseMac() {
+        new Thread(new Runnable() {
+            @Override public void run() {
+                final String mac = DeviceConfig.discoverTc1Mac(1800);
+                if (mac == null || mac.equals(TC1_MAC)) return;
+                TC1_MAC = mac;
+                DeviceConfig.setTc1Mac(Tc1Activity.this, mac);
+                ui.post(new Runnable() {
+                    @Override public void run() {
+                        tcMac.setText(mac);
+                        if (client != null) client.removeListener(clientListener);
+                        client = new Tc1Client(mac);
+                        client.addListener(clientListener);
+                        client.start();
+                        client.query();
+                    }
+                });
+            }
+        }, "tc1-discover").start();
     }
 
     private final Runnable refreshLoop = new Runnable() {
@@ -247,6 +274,10 @@ public class Tc1Activity extends Activity implements Tc1Client.Listener {
                 lastReplySeen = true;
                 tcStatus.setText("在线 · " + s.mac);
                 tcStatus.setTextColor(0xFF34C759);
+                if (s.hasPlugData && s.mac != null && s.mac.length() == 12
+                        && !DeviceConfig.tc1Verified(Tc1Activity.this)) {
+                    DeviceConfig.setTc1Verified(Tc1Activity.this, true);
+                }
                 if (s.power != null) {
                     powerText.setText(s.power.equals("-1") ? "异常" : s.power + " W");
                 }
