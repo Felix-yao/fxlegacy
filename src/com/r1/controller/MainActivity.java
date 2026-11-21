@@ -28,26 +28,31 @@ public class MainActivity extends Activity {
 
     private TextView statusText, infoText, volumeText, refreshBtn;
     private TextView timerStatus, timerCancel, sleepHint, sleepSwitch;
-    private TextView infoFw, infoWifi, infoUptime, infoBt;
+    private TextView infoFw;
+    private View ipRow;
     private TextView btButton;
     private View dot;
     private SeekBar seekBar;
     private EditText ipEdit;
-    private TextView findBtnView, findHint;
+    private TextView findBtnView;
     private boolean finding = false;
     private int findDots = 0;
     private long findStartAt = 0;
 
-    /** Animated "searching…" line under the address field. */
+    /** Animated "searching…" written straight into the connection-card status line. */
     private final Runnable findTicker = new Runnable() {
         @Override public void run() {
             if (!finding) return;
             findDots = (findDots + 1) % 4;
-            StringBuilder sb = new StringBuilder("正在局域网内查找音箱");
+            StringBuilder sb = new StringBuilder("正在查找音箱");
             for (int i = 0; i < findDots; i++) sb.append("·");
             long sec = (System.currentTimeMillis() - findStartAt) / 1000;
             sb.append("  ").append(sec).append("s");
-            if (findHint != null) findHint.setText(sb.toString());
+            if (statusText != null) {
+                statusText.setText(sb.toString());
+                statusText.setTextColor(0xFFB27300);
+            }
+            if (dot != null) dot.setBackgroundColor(0xFFFF9500);
             ui.postDelayed(this, 450);
         }
     };
@@ -108,15 +113,12 @@ public class MainActivity extends Activity {
         sleepHint = findViewById(R.id.sleepHint);
         sleepSwitch = findViewById(R.id.sleepSwitch);
         infoFw = findViewById(R.id.infoFw);
-        infoWifi = findViewById(R.id.infoWifi);
-        infoUptime = findViewById(R.id.infoUptime);
-        infoBt = findViewById(R.id.infoBt);
+        ipRow = findViewById(R.id.ipRow);
         btButton = findViewById(R.id.btButton);
         dot = findViewById(R.id.dot);
         seekBar = findViewById(R.id.seekBar);
         ipEdit = findViewById(R.id.ipEdit);
         findBtnView = findViewById(R.id.findBtn);
-        findHint = findViewById(R.id.findHint);
 
         android.content.SharedPreferences p = getSharedPreferences(PREF, MODE_PRIVATE);
         ip = DeviceConfig.r1Ip(this);
@@ -164,9 +166,10 @@ public class MainActivity extends Activity {
             findBtnView.setTextColor(0xFFAEAEB2);
             findBtnView.setClickable(false);
         }
-        if (findHint != null) {
-            findHint.setTextColor(0xFF8E8E93);
-            findHint.setText("正在局域网内查找音箱…");
+        if (ipRow != null) ipRow.setAlpha(0.55f);
+        if (infoText != null) {
+            infoText.setTextColor(0xFF8E8E93);
+            infoText.setText("搜索完自动连接 · 也可手动填 IP 后点保存");
         }
         ui.removeCallbacks(findTicker);
         ui.post(findTicker);
@@ -183,14 +186,11 @@ public class MainActivity extends Activity {
                             findBtnView.setTextColor(0xFF007AFF);
                             findBtnView.setClickable(true);
                         }
+                        if (ipRow != null) ipRow.setAlpha(1f);
                         if (found == null) {
-                            if (findHint != null) {
-                                findHint.setTextColor(0xFFE24B4A);
-                                findHint.setText("没找到音箱 · 确认已通电并连着同一 WiFi，也可手动填 IP");
-                            }
+                            setStatus(false, "没找到音箱 · 确认已通电并连着同一 WiFi，也可手动填 IP");
                             Toast.makeText(MainActivity.this,
                                     "没找到音箱", Toast.LENGTH_SHORT).show();
-                            refresh();
                             return;
                         }
                         ip = found;
@@ -198,10 +198,6 @@ public class MainActivity extends Activity {
                         sessionIp = null;
                         DeviceConfig.setR1Ip(MainActivity.this, found);
                         ipEdit.setText(found);
-                        if (findHint != null) {
-                            findHint.setTextColor(0xFF34C759);
-                            findHint.setText("已找到音箱 " + found + " · 已保存");
-                        }
                         Toast.makeText(MainActivity.this,
                                 "已找到音箱：" + found, Toast.LENGTH_SHORT).show();
                         refresh();
@@ -240,6 +236,7 @@ public class MainActivity extends Activity {
                 dot.setBackgroundColor(Color.parseColor(online ? "#34C759" : "#E24B4A"));
                 statusText.setText(online ? "音箱在线" : "音箱离线");
                 statusText.setTextColor(Color.parseColor(online ? "#000000" : "#E24B4A"));
+                infoText.setTextColor(0xFF8E8E93);
                 infoText.setText(detail);
             }
         });
@@ -266,10 +263,25 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Amber "connecting" state so the card never sits on a stale message. */
+    private void showConnecting() {
+        ui.post(new Runnable() {
+            @Override public void run() {
+                if (finding) return;
+                dot.setBackgroundColor(0xFFFF9500);
+                statusText.setText("连接音箱…");
+                statusText.setTextColor(0xFFB27300);
+                infoText.setTextColor(0xFF8E8E93);
+                infoText.setText("正在与音箱建立连接，最长约 20 秒");
+            }
+        });
+    }
+
     private void refresh() {
         if (busy) return;
         busy = true;
         final String host = ip;
+        showConnecting();
         pool.execute(new Runnable() {
             @Override public void run() {
                 try {
@@ -299,10 +311,10 @@ public class MainActivity extends Activity {
                     final String[] info = AdbClient.readInfo(s);
                     ui.post(new Runnable() {
                         @Override public void run() {
-                            infoFw.setText(info[0]);
-                            infoWifi.setText(info[1]);
-                            infoUptime.setText(info[2]);
-                            infoBt.setText(info[3]);
+                            infoFw.setText("固件 " + info[0]);
+                            infoText.setTextColor(0xFF8E8E93);
+                            infoText.setText("已直连 " + host + " · WiFi " + info[1]
+                                    + " · 已开机 " + info[2] + " · 蓝牙" + info[3]);
                         }
                     });
                 } catch (final Exception e) {
