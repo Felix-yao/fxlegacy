@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F2F2F7">
+  <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
+      android:layout_height="wrap_content" android:padding="18dp">
+
+    <!-- custom title bar (no system ActionBar) -->
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+      <TextView android:id="@+id/tc1Back" android:layout_width="34dp" android:layout_height="34dp"
+          android:text="‹" android:textSize="30sp" android:textColor="#007AFF"
+          android:gravity="center" android:clickable="true" android:focusable="true"/>
+      <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:text="TC1 排插" android:textSize="20sp" android:textStyle="bold"
+          android:textColor="#000000"/>
+    </LinearLayout>
+
+    <TextView android:id="@+id/tc1Status" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:layout_gravity="center_horizontal"
+        android:text="正在检测…" android:textSize="12sp" android:textColor="#8E8E93"
+        android:layout_marginBottom="14dp"/>
+
+    <!-- Power + runtime -->
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:background="@drawable/card" android:padding="16dp">
+      <LinearLayout android:orientation="vertical" android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="实时功率" android:textSize="13sp" android:textColor="#8E8E93"/>
+        <TextView android:id="@+id/powerText" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="– W" android:textSize="26sp"
+            android:textColor="#000000" android:layout_marginTop="2dp"/>
+      </LinearLayout>
+      <LinearLayout android:orientation="vertical" android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="累计运行" android:textSize="13sp" android:textColor="#8E8E93"/>
+        <TextView android:id="@+id/runtimeText" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="–" android:textSize="15sp"
+            android:textColor="#000000" android:layout_marginTop="6dp"/>
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- Master switch -->
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:background="@drawable/card"
+        android:padding="14dp" android:layout_marginTop="14dp" android:gravity="center_vertical">
+      <LinearLayout android:orientation="vertical" android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="总开关" android:textSize="15sp" android:textStyle="bold"
+            android:textColor="#000000"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="一键打开 / 关闭全部 6 路" android:textSize="12sp"
+            android:textColor="#8E8E93" android:layout_marginTop="2dp"/>
+      </LinearLayout>
+      <TextView android:id="@+id/masterSwitch" android:layout_width="46dp" android:layout_height="27dp"
+          android:background="@drawable/switch_off" android:clickable="true" android:focusable="true"/>
+    </LinearLayout>
+
+    <!-- 6 sockets in 2 rows x 3 cols, physical layout: top(左中右)/bottom(左中右) -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="插口（按音箱实际排布）" android:textSize="12sp" android:textColor="#8E8E93"
+        android:layout_marginTop="18dp" android:layout_marginStart="4dp" android:layout_marginBottom="6dp"/>
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+      <LinearLayout android:id="@+id/plugRowTop" android:orientation="horizontal"
+          android:layout_width="match_parent" android:layout_height="wrap_content"/>
+      <LinearLayout android:id="@+id/plugRowBottom" android:orientation="horizontal"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="10dp"/>
+    </LinearLayout>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="点名称可改名 · 点「定时」为该插口单独设置关闭倒计时" android:textSize="11sp" android:textColor="#AEAEB2"
+        android:layout_marginStart="4dp" android:layout_marginTop="5dp"/>
+
+    <!-- Timer is now per-socket (the 定时 button on each row) -->
+
+    <!-- Device info -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="设备信息" android:textSize="12sp" android:textColor="#8E8E93"
+        android:layout_marginTop="18dp" android:layout_marginStart="4dp" android:layout_marginBottom="6dp"/>
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:background="@drawable/card">
+      <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:padding="12dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="MAC" android:textSize="14sp" android:textColor="#3C3C43"/>
+        <TextView android:id="@+id/tcMac" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="–" android:textSize="14sp"
+            android:textColor="#8E8E93" android:gravity="end"/>
+      </LinearLayout>
+      <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:padding="12dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="固件" android:textSize="14sp" android:textColor="#3C3C43"/>
+        <TextView android:id="@+id/tcVersion" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="–" android:textSize="14sp"
+            android:textColor="#8E8E93" android:gravity="end"/>
+      </LinearLayout>
+    </LinearLayout>
+
+  </LinearLayout>
+</ScrollView>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:paddingLeft="22dp" android:paddingRight="22dp">
+
+  <LinearLayout android:id="@+id/dlgCard" android:orientation="vertical"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:background="@drawable/dialog_card">
+
+    <TextView android:id="@+id/dlgTitle" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="定时关闭" android:gravity="center"
+        android:textSize="17sp" android:textStyle="bold" android:textColor="#000000"
+        android:paddingTop="20dp" android:paddingBottom="18dp"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA"/>
+
+    <TextView android:id="@+id/dlg5" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="5 分钟" android:gravity="center"
+        android:textSize="17sp" android:textColor="#007AFF" android:background="@drawable/dialog_item"
+        android:paddingTop="15dp" android:paddingBottom="15dp" android:clickable="true" android:focusable="true"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA"/>
+    <TextView android:id="@+id/dlg15" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="15 分钟" android:gravity="center"
+        android:textSize="17sp" android:textColor="#007AFF" android:background="@drawable/dialog_item"
+        android:paddingTop="15dp" android:paddingBottom="15dp" android:clickable="true" android:focusable="true"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA"/>
+    <TextView android:id="@+id/dlg30" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="30 分钟" android:gravity="center"
+        android:textSize="17sp" android:textColor="#007AFF" android:background="@drawable/dialog_item"
+        android:paddingTop="15dp" android:paddingBottom="15dp" android:clickable="true" android:focusable="true"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA"/>
+    <TextView android:id="@+id/dlg60" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="60 分钟" android:gravity="center"
+        android:textSize="17sp" android:textColor="#007AFF" android:background="@drawable/dialog_item"
+        android:paddingTop="15dp" android:paddingBottom="15dp" android:clickable="true" android:focusable="true"/>
+
+    <View android:layout_width="match_parent" android:layout_height="8dp" android:background="#F2F2F7"/>
+
+    <TextView android:id="@+id/dlgCancelTimer" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="取消定时" android:gravity="center"
+        android:textSize="17sp" android:textColor="#FF3B30" android:background="@drawable/dialog_item"
+        android:paddingTop="15dp" android:paddingBottom="15dp" android:clickable="true" android:focusable="true"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA"/>
+    <TextView android:id="@+id/dlgClose" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="关闭" android:gravity="center"
+        android:textSize="17sp" android:textStyle="bold" android:textColor="#007AFF"
+        android:background="@drawable/dialog_item"
+        android:paddingTop="16dp" android:paddingBottom="16dp" android:clickable="true" android:focusable="true"/>
+  </LinearLayout>
+</LinearLayout>

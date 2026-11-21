@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:paddingLeft="22dp" android:paddingRight="22dp">
+
+  <LinearLayout android:id="@+id/rngCard" android:orientation="vertical"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:background="@drawable/dialog_card">
+
+    <TextView android:id="@+id/rngTitle" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="重命名插口" android:gravity="center"
+        android:textSize="17sp" android:textStyle="bold" android:textColor="#000000"
+        android:paddingTop="20dp" android:paddingBottom="16dp"/>
+
+    <EditText android:id="@+id/rngInput" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:background="@drawable/dialog_input"
+        android:textSize="16sp" android:textColor="#000000" android:padding="12dp"
+        android:layout_marginLeft="18dp" android:layout_marginRight="18dp"
+        android:singleLine="true"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="#E5E5EA" android:layout_marginTop="18dp"/>
+
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+      <TextView android:id="@+id/rngCancel" android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content" android:text="取消" android:gravity="center"
+          android:textSize="17sp" android:textColor="#007AFF" android:background="@drawable/dialog_item"
+          android:paddingTop="15dp" android:paddingBottom="15dp"
+          android:clickable="true" android:focusable="true"/>
+      <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#E5E5EA"/>
+      <TextView android:id="@+id/rngSave" android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content" android:text="保存" android:gravity="center"
+          android:textSize="17sp" android:textStyle="bold" android:textColor="#007AFF"
+          android:background="@drawable/dialog_item"
+          android:paddingTop="15dp" android:paddingBottom="15dp"
+          android:clickable="true" android:focusable="true"/>
+    </LinearLayout>
+  </LinearLayout>
+</LinearLayout>

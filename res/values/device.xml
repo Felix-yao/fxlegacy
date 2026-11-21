@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  设备配置：改成你自己的设备信息后重新构建即可。
+  - r1_ip  : R1 音箱的局域网 IP（在 App 里也能临时改）
+  - tc1_mac: zTC1 排插的 MAC 地址（小写、无冒号）
+-->
+<resources>
+    <string name="r1_ip">192.168.31.109</string>
+    <string name="tc1_mac">d0bae462f864</string>
+</resources>

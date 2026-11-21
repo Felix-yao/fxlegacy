@@ -1,0 +1,25 @@
+# Signing keystore - generated locally on first build, NEVER commit
+r1app.jks
+*.jks
+*.keystore
+
+# Build outputs
+build/
+gen/
+apk/
+交付/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp / screenshots
+*.png.bak
+__pycache__/
+*.pyc
