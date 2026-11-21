@@ -39,6 +39,14 @@ public final class DeviceConfig {
     private static final String KEY_TC1_VERIFIED = "tc1Verified";
 
     private static final int ADB_PORT = 5555;
+    /**
+     * Discovery probe port. The R1 runs a small HTTP service on 9999.
+     * We must NOT probe 5555: opening and closing a bare socket against the
+     * R1's adbd leaves it in CLOSE_WAIT and eventually wedges the daemon
+     * (the speaker then needs a power cycle). 9999 is a separate, harmless
+     * process that also proves the host is really an R1.
+     */
+    private static final int PROBE_PORT = 9999;
 
     private DeviceConfig() { }
 
@@ -120,8 +128,9 @@ public final class DeviceConfig {
     }
 
     /**
-     * Scan the local /24 for a host that accepts a TCP connection on 5555
-     * (the R1's ADB port). Returns the first hit, or null.
+     * Scan the local /24 for a host whose 9999 port answers with HTTP —
+     * that is the R1's own service, so no ADB socket is touched.
+     * Returns the first hit, or null.
      */
     public static String discoverR1Ip(long budgetMs) {
         String local = localIpv4();
@@ -143,8 +152,16 @@ public final class DeviceConfig {
                 @Override public String call() {
                     Socket s = new Socket();
                     try {
-                        s.connect(new InetSocketAddress(host, ADB_PORT), 400);
-                        return host;
+                        s.connect(new InetSocketAddress(host, PROBE_PORT), 400);
+                        s.setSoTimeout(600);
+                        s.getOutputStream().write("GET / HTTP/1.0\r\n\r\n".getBytes("UTF-8"));
+                        s.getOutputStream().flush();
+                        byte[] buf = new byte[24];
+                        int n = s.getInputStream().read(buf);
+                        if (n > 0 && new String(buf, 0, n, "UTF-8").startsWith("HTTP/")) {
+                            return host;
+                        }
+                        return null;
                     } catch (Exception e) {
                         return null;
                     } finally {

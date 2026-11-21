@@ -61,6 +61,7 @@ public class MainActivity extends Activity {
     private final Handler ui = new Handler(Looper.getMainLooper());
 
     private volatile boolean busy = false;
+    private volatile boolean pendingRefresh = false;
     private int currentVolume = -1;
     private volatile String ip = "";
     private AdbClient.Session session = null;
@@ -174,7 +175,10 @@ public class MainActivity extends Activity {
         ui.removeCallbacks(findTicker);
         ui.post(findTicker);
 
-        pool.execute(new Runnable() {
+        // Discovery gets its own thread: the single-thread pool may still be
+        // busy with an ADB handshake, and queueing the scan behind it made the
+        // "查找中" counter run for the whole handshake duration.
+        new Thread(new Runnable() {
             @Override public void run() {
                 final String found = DeviceConfig.discoverR1Ip(9000);
                 ui.post(new Runnable() {
@@ -200,11 +204,15 @@ public class MainActivity extends Activity {
                         ipEdit.setText(found);
                         Toast.makeText(MainActivity.this,
                                 "已找到音箱：" + found, Toast.LENGTH_SHORT).show();
+                        // Paint the next state right away: refresh() may have to
+                        // queue behind a slow handshake, and the card must not
+                        // keep showing a frozen "查找中 0s".
+                        showConnecting();
                         refresh();
                     }
                 });
             }
-        });
+        }, "r1-discover").start();
     }
 
     private void click(int id, final Runnable r) {
@@ -278,7 +286,7 @@ public class MainActivity extends Activity {
     }
 
     private void refresh() {
-        if (busy) return;
+        if (busy) { pendingRefresh = true; return; }
         busy = true;
         final String host = ip;
         showConnecting();
@@ -321,6 +329,12 @@ public class MainActivity extends Activity {
                     setStatus(false, "连接出错：" + e.getMessage());
                 } finally {
                     busy = false;
+                    if (pendingRefresh) {
+                        pendingRefresh = false;
+                        ui.post(new Runnable() {
+                            @Override public void run() { refresh(); }
+                        });
+                    }
                 }
             }
         });
