@@ -2,6 +2,9 @@
 
 一个装在安卓手机上的设备控制 App，通过家里 WiFi 直连**斐讯 R1 音箱**和**斐讯 TC1 排插**（刷了 zTC1 固件），电脑无需开机。iOS 风格界面。
 
+> **下载**：[最新 Release](https://github.com/Felix-yao/fxlegacy/releases/latest)
+> 注：发布版 APK 内设备信息为占位值，需按下方「设备配置」改成自己的设备，或自行构建。
+
 ## 功能
 
 ### R1 音箱
