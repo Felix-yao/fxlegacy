@@ -219,6 +219,12 @@
       </LinearLayout>
     </LinearLayout>
 
+    <TextView android:id="@+id/findHint" android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="点「查找」可自动在局域网内定位音箱"
+        android:textSize="11sp" android:textColor="#AEAEB2"
+        android:layout_marginStart="4dp" android:layout_marginTop="6dp"/>
+
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="手机直连音箱 · 电脑无需开机" android:textSize="11sp" android:textColor="#AEAEB2"
         android:layout_gravity="center_horizontal" android:layout_marginTop="20dp"/>

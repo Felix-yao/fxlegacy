@@ -33,6 +33,24 @@ public class MainActivity extends Activity {
     private View dot;
     private SeekBar seekBar;
     private EditText ipEdit;
+    private TextView findBtnView, findHint;
+    private boolean finding = false;
+    private int findDots = 0;
+    private long findStartAt = 0;
+
+    /** Animated "searching…" line under the address field. */
+    private final Runnable findTicker = new Runnable() {
+        @Override public void run() {
+            if (!finding) return;
+            findDots = (findDots + 1) % 4;
+            StringBuilder sb = new StringBuilder("正在局域网内查找音箱");
+            for (int i = 0; i < findDots; i++) sb.append("·");
+            long sec = (System.currentTimeMillis() - findStartAt) / 1000;
+            sb.append("  ").append(sec).append("s");
+            if (findHint != null) findHint.setText(sb.toString());
+            ui.postDelayed(this, 450);
+        }
+    };
 
     private final ExecutorService pool = Executors.newSingleThreadExecutor();
     private final Handler ui = new Handler(Looper.getMainLooper());
@@ -97,6 +115,8 @@ public class MainActivity extends Activity {
         dot = findViewById(R.id.dot);
         seekBar = findViewById(R.id.seekBar);
         ipEdit = findViewById(R.id.ipEdit);
+        findBtnView = findViewById(R.id.findBtn);
+        findHint = findViewById(R.id.findHint);
 
         android.content.SharedPreferences p = getSharedPreferences(PREF, MODE_PRIVATE);
         ip = DeviceConfig.r1Ip(this);
@@ -135,33 +155,55 @@ public class MainActivity extends Activity {
      * @param manual true when the user tapped 查找 (always show feedback)
      */
     private void findSpeaker(final boolean manual) {
-        if (manual) setStatus(false, "正在局域网内查找音箱…");
+        if (finding) return;
+        finding = true;
+        findStartAt = System.currentTimeMillis();
+        findDots = 0;
+        if (findBtnView != null) {
+            findBtnView.setText("查找中…");
+            findBtnView.setTextColor(0xFFAEAEB2);
+            findBtnView.setClickable(false);
+        }
+        if (findHint != null) {
+            findHint.setTextColor(0xFF8E8E93);
+            findHint.setText("正在局域网内查找音箱…");
+        }
+        ui.removeCallbacks(findTicker);
+        ui.post(findTicker);
+
         pool.execute(new Runnable() {
             @Override public void run() {
-                String found = DeviceConfig.discoverR1Ip(9000);
-                if (found == null) {
-                    ui.post(new Runnable() {
-                        @Override public void run() {
-                            if (manual) {
-                                Toast.makeText(MainActivity.this,
-                                        "没找到音箱，确认它已通电并连着同一 WiFi",
-                                        Toast.LENGTH_LONG).show();
-                            }
-                            refresh();
-                        }
-                    });
-                    return;
-                }
-                final String host = found;
-                ip = host;
-                session = null;
-                sessionIp = null;
-                DeviceConfig.setR1Ip(MainActivity.this, host);
+                final String found = DeviceConfig.discoverR1Ip(9000);
                 ui.post(new Runnable() {
                     @Override public void run() {
-                        ipEdit.setText(host);
+                        finding = false;
+                        ui.removeCallbacks(findTicker);
+                        if (findBtnView != null) {
+                            findBtnView.setText("查找");
+                            findBtnView.setTextColor(0xFF007AFF);
+                            findBtnView.setClickable(true);
+                        }
+                        if (found == null) {
+                            if (findHint != null) {
+                                findHint.setTextColor(0xFFE24B4A);
+                                findHint.setText("没找到音箱 · 确认已通电并连着同一 WiFi，也可手动填 IP");
+                            }
+                            Toast.makeText(MainActivity.this,
+                                    "没找到音箱", Toast.LENGTH_SHORT).show();
+                            refresh();
+                            return;
+                        }
+                        ip = found;
+                        session = null;
+                        sessionIp = null;
+                        DeviceConfig.setR1Ip(MainActivity.this, found);
+                        ipEdit.setText(found);
+                        if (findHint != null) {
+                            findHint.setTextColor(0xFF34C759);
+                            findHint.setText("已找到音箱 " + found + " · 已保存");
+                        }
                         Toast.makeText(MainActivity.this,
-                                "已找到音箱：" + host, Toast.LENGTH_SHORT).show();
+                                "已找到音箱：" + found, Toast.LENGTH_SHORT).show();
                         refresh();
                     }
                 });
