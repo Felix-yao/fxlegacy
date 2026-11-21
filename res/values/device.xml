@@ -5,6 +5,6 @@
   - tc1_mac: zTC1 排插的 MAC 地址（小写、无冒号）
 -->
 <resources>
-    <string name="r1_ip">192.168.31.109</string>
-    <string name="tc1_mac">d0bae462f864</string>
+    <string name="r1_ip">192.168.1.100</string>
+    <string name="tc1_mac">001122334455</string>
 </resources>

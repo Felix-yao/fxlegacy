@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
 
     private volatile boolean busy = false;
     private int currentVolume = -1;
-    private volatile String ip = "192.168.31.109"; // replaced in onCreate
+    private volatile String ip = "192.168.1.100"; // replaced in onCreate
     private AdbClient.Session session = null;
     private String sessionIp = null;
 

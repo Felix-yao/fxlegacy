@@ -56,8 +56,8 @@ bash build.sh
 编辑 `res/values/device.xml`：
 
 ```xml
-<string name="r1_ip">192.168.31.109</string>      <!-- 你的 R1 音箱 IP -->
-<string name="tc1_mac">d0bae462f864</string>      <!-- 你的 TC1 MAC（小写无冒号） -->
+<string name="r1_ip">192.168.1.100</string>      <!-- 你的 R1 音箱 IP -->
+<string name="tc1_mac">001122334455</string>      <!-- 你的 TC1 MAC（小写无冒号） -->
 ```
 
 改完重新 `bash build.sh`。R1 的 IP 也可以在 App 内「音箱地址」处临时修改。
